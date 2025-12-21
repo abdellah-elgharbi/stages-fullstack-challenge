@@ -80,6 +80,14 @@ On doit pouvoir supprimer n'importe quel commentaire, qu'il soit seul ou non.
 - Pourquoi l'erreur se produit seulement avec 1 commentaire et pas avec 2+ ?
 - Quelle est la meilleure approche pour éviter ce type d'erreur à l'avenir dans d'autres parties du code ?
 
+### Resolution
+
+- **Solution**: Remplacer `$remainingComments[0]` par `$remainingComments->first()`.
+
+- **Explication** : Après suppression du dernier commentaire, la collection est vide donc l’index `0` n’existe pas (mais `first()` retourne `null`). [web:665]
+
+- **Test** : `tests/Feature/CommentTest.php::test_delete_last_comment_works`.
+
 ---
 
 ### [BUG-003] Upload d'image > 2MB fait crasher l'application
