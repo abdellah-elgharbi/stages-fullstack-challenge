@@ -24,7 +24,7 @@ function ArticleCard({ article, onDelete }) {
       timeZone: 'Europe/Paris'
     }).format(date);
 
-    // Try to extract short timezone name (e.g., CET/CEST)
+    // extract short timezone name (e.g., CET/CEST)
     const tzPart = new Intl.DateTimeFormat('fr-FR', {
       timeZone: 'Europe/Paris',
       timeZoneName: 'short'

@@ -41,6 +41,10 @@ Le problème : l'utilisateur doit taper exactement le même accent que dans le t
 - Comment vas-tu gérer la migration de la collation sachant que les données existent déjà et qu'on ne peut pas recréer la table ni supprimer les données ?
 - Comment tester que ta solution fonctionne dans tous les cas (accents, majuscules/minuscules, caractères spéciaux) ?
 
+#### Résolution
+- **Solution** : Utilisation de `CONVERT(title USING utf8mb4) COLLATE utf8mb4_unicode_ci` dans la requête SQL pour ignorer les accents.
+- **Résultat** : La recherche trouve les articles indépendamment des accents (ex: "cafe" trouve "café") sans migration DB.
+
 ---
 
 ### [BUG-002] Impossible de supprimer le dernier commentaire d'un article
