@@ -78,7 +78,7 @@ class ArticleController extends Controller
 
         // Escape LIKE wildcards to avoid unintended matches
         $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query);
-
+        // SQL injection fix: the user input is passed as a bound parameter ("?") instead of being concatenated into the raw SQL string.
         // Use CONVERT + COLLATE to perform an accent-insensitive comparison without changing the DB schema.
         $collation = 'utf8mb4_unicode_ci';
 
