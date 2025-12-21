@@ -265,6 +265,9 @@ curl "http://localhost:8000/api/articles/search?q=%27%20UNION%20SELECT%20id,%20e
 - Pourquoi utiliser Eloquent plutôt que `DB::select()` raw pour ce type de requête ?
 - Comment t'assurer qu'aucune autre partie du code n'a le même problème ?
 
+#### Résolution
+- **Ce qui a été changé** : Remplacement de la requête SQL concaténée (vulnérable) par une recherche via Query Builder / Eloquent avec **parameter binding** (requêtes préparées), empêchant `OR '1'='1` et `UNION SELECT ...`.
+- **Tests ajoutés** : Tests de sécurité ajoutés dans `tests/Feature/SecurityTest.php` (classe `SecurityTest`) pour vérifier que les payloads d’injection retournent 0 résultat et n’exposent pas les données `users`.
 ---
 
 ### [SEC-003] CORS ouvert à tous les domaines + XSS dans les commentaires
