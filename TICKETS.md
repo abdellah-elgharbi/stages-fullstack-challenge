@@ -139,6 +139,11 @@ Dates en français, timezone Europe/Paris, format JJ/MM/AAAA.
 - Faut-il modifier le backend, le frontend, ou les deux ?
 - Comment s'assurer que les dates stockées en base restent cohérentes après le changement ?
 
+#### Résolution
+- **Ce qui a été changé** : Configuration mise à jour pour utiliser **`locale: fr`** et **`timezone: Europe/Paris`** ; frontend utilise `Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris' })` pour le rendu des dates.
+- **Tests ajoutés** : Test unitaire pour vérifier `config('app.locale')` et `config('app.timezone')` ainsi que la configuration de Carbon.
+- **Remarque sur la BD** : Laravel stocke les timestamps en UTC par défaut — si vous avez des enregistrements avec timezone locale, exécuter un script de migration pour les convertir en UTC avant mise en production.
+
 ---
 
 ## 🔒 Sécurité
