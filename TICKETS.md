@@ -206,6 +206,10 @@ email: admin@blog.com, password: "$2y$10$92IXU..."
 - Où faut-il modifier le code pour que les futurs utilisateurs aient des mots de passe hashés ?
 
 ---
+#### Résolution
+- **Ce qui a été changé** : Les mots de passe sont désormais stockés hashés via `Hash::make()` (bcrypt/argon2) au moment de la création / mise à jour des utilisateurs. [web:779]
+- **Migration des données existantes** : Une commande/script convertit les mots de passe déjà en clair en hashes `Hash::make(...)`. [web:779]
+- **Tests ajoutés** : Test unitaire/feature qui vérifie qu’un mot de passe enregistré est bien hashé en utilisant `Hash::check()` (et non une comparaison directe). [web:779][web:863]
 
 ### [SEC-002] Injection SQL possible dans la recherche
 
