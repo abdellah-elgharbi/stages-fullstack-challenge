@@ -44,6 +44,7 @@ Le problème : l'utilisateur doit taper exactement le même accent que dans le t
 #### Résolution
 - **Solution** : Utilisation de `CONVERT(title USING utf8mb4) COLLATE utf8mb4_unicode_ci` dans la requête SQL pour ignorer les accents.
 - **Résultat** : La recherche trouve les articles indépendamment des accents (ex: "cafe" trouve "café") sans migration DB.
+- **Tests** : Tous les tests de `tests/Feature/SearchTest.php` sont validés (accents, casse, caractères spéciaux).
 
 ---
 
