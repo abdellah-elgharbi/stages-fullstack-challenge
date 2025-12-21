@@ -74,6 +74,7 @@ class SearchTest extends TestCase
         $response = $this->getJson('/api/articles/search?q=Romeo & Juliet');
         $response->assertStatus(200)
                  ->assertJsonCount(1);
+ 
     
     }
     
