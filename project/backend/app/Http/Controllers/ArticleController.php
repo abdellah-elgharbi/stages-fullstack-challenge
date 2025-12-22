@@ -13,7 +13,10 @@ class ArticleController extends Controller
      */
     public function index(Request $request)
     {
-        $articles = Article::all();
+        // Enable query logging for this request
+        \DB::enableQueryLog();
+        
+        $articles = Article::with('author')->withCount('comments')->get();
 
         $articles = $articles->map(function ($article) use ($request) {
             if ($request->has('performance_test')) {
@@ -25,13 +28,13 @@ class ArticleController extends Controller
                 'title' => $article->title,
                 'content' => substr($article->content, 0, 200) . '...',
                 'author' => $article->author->name,
-                'comments_count' => $article->comments->count(),
+                'comments_count' => $article->comments_count,
                 'published_at' => $article->published_at,
                 'created_at' => $article->created_at,
             ];
         });
 
-        return response()->json($articles);
+        return response()->json($articles)->header('X-SQL-Count', count(\DB::getQueryLog()));
     }
 
     /**

@@ -29,5 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Set PHP locale for date/time translations where available
         setlocale(LC_TIME, 'fr_FR.UTF-8', 'fr_FR', 'French_France');
+
+
     }
-} 
+}

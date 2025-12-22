@@ -357,6 +357,16 @@ Charger la liste avec **eager loading** :
 - Y a-t-il d'autres endroits dans le code avec le même problème ?
 - Pourquoi le mode test ajoute-t-il 30ms par article et comment cela simule-t-il une DB distante ?
 
+#### Résolution
+- **Solution** : Utilisation de **Eager Loading** avec `Article::with('author')->withCount('comments')->get()`.
+- **Amélioration** : 
+    - Réduit de **101 requêtes à 2 requêtes** (98% d'amélioration)
+    - 1 requête pour articles + authors (JOIN)
+    - 1 requête pour le COUNT des commentaires
+- **Vérification** : 
+    - `tests/Feature/PerformanceTest.php` confirme < 5 requêtes
+    - Header HTTP `X-SQL-Count: 2` vérifié manuellement
+
 ---
 
 ### [PERF-002] Les images ne sont pas optimisées (backend + frontend)
