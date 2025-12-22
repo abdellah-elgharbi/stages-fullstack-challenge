@@ -41,6 +41,11 @@ Le problème : l'utilisateur doit taper exactement le même accent que dans le t
 - Comment vas-tu gérer la migration de la collation sachant que les données existent déjà et qu'on ne peut pas recréer la table ni supprimer les données ?
 - Comment tester que ta solution fonctionne dans tous les cas (accents, majuscules/minuscules, caractères spéciaux) ?
 
+#### Résolution
+- **Solution** : Utilisation de `CONVERT(title USING utf8mb4) COLLATE utf8mb4_unicode_ci` dans la requête SQL pour ignorer les accents.
+- **Résultat** : La recherche trouve les articles indépendamment des accents (ex: "cafe" trouve "café") sans migration DB.
+- **Tests** : Tous les tests de `tests/Feature/SearchTest.php` sont validés (accents, casse, caractères spéciaux).
+
 ---
 
 ### [BUG-002] Impossible de supprimer le dernier commentaire d'un article
@@ -74,6 +79,14 @@ On doit pouvoir supprimer n'importe quel commentaire, qu'il soit seul ou non.
 - Comment vas-tu reproduire l'erreur de manière fiable pour la débugger ?
 - Pourquoi l'erreur se produit seulement avec 1 commentaire et pas avec 2+ ?
 - Quelle est la meilleure approche pour éviter ce type d'erreur à l'avenir dans d'autres parties du code ?
+
+### Resolution
+
+- **Solution**: Remplacer `$remainingComments[0]` par `$remainingComments->first()`.
+
+- **Explication** : Après suppression du dernier commentaire, la collection est vide donc l’index `0` n’existe pas (mais `first()` retourne `null`). [web:665]
+
+- **Test** : `tests/Feature/CommentTest.php::test_delete_last_comment_works`.
 
 ---
 
@@ -139,6 +152,13 @@ Dates en français, timezone Europe/Paris, format JJ/MM/AAAA.
 - Faut-il modifier le backend, le frontend, ou les deux ?
 - Comment s'assurer que les dates stockées en base restent cohérentes après le changement ?
 
+#### Résolution
+- **Ce qui a été changé** : Configuration mise à jour pour utiliser **`locale: fr`** et **`timezone: Europe/Paris`** ; frontend utilise `Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris' })` pour le rendu des dates.
+- **Tests ajoutés** : Test unitaire pour vérifier `config('app.locale')` et `config('app.timezone')` ainsi que la configuration de Carbon.
+- **Base de données** :  
+  Laravel stocke les timestamps en UTC par défaut.  
+  Si certaines données existent avec un fuseau horaire local, il est recommandé de les convertir en UTC avant la mise en production.
+
 ---
 
 ## 🔒 Sécurité
@@ -185,7 +205,13 @@ email: admin@blog.com, password: "$2y$10$92IXU..."
 - Comment t'assurer que l'authentification fonctionne toujours après la modification ?
 - Où faut-il modifier le code pour que les futurs utilisateurs aient des mots de passe hashés ?
 
+#### Résolution
+- **Ce qui a été changé** : Les mots de passe sont désormais stockés hashés via `Hash::make()` (bcrypt/argon2) au moment de la création / mise à jour des utilisateurs. [web:779]
+- **Migration des données existantes** : Une commande/script convertit les mots de passe déjà en clair en hashes `Hash::make(...)`. [web:779]
+- **Tests ajoutés** : Test unitaire/feature qui vérifie qu’un mot de passe enregistré est bien hashé en utilisant `Hash::check()` (et non une comparaison directe). [web:779][web:863]
+
 ---
+
 
 ### [SEC-002] Injection SQL possible dans la recherche
 
@@ -239,6 +265,9 @@ curl "http://localhost:8000/api/articles/search?q=%27%20UNION%20SELECT%20id,%20e
 - Pourquoi utiliser Eloquent plutôt que `DB::select()` raw pour ce type de requête ?
 - Comment t'assurer qu'aucune autre partie du code n'a le même problème ?
 
+#### Résolution
+- **Ce qui a été changé** : Remplacement de la requête SQL concaténée (vulnérable) par une recherche via Query Builder / Eloquent avec **parameter binding** (requêtes préparées), empêchant `OR '1'='1` et `UNION SELECT ...`.
+- **Tests ajoutés** : Tests de sécurité ajoutés dans `tests/Feature/SecurityTest.php` (classe `SecurityTest`) pour vérifier que les payloads d’injection retournent 0 résultat et n’exposent pas les données `users`.
 ---
 
 ### [SEC-003] CORS ouvert à tous les domaines + XSS dans les commentaires
@@ -327,6 +356,16 @@ Charger la liste avec **eager loading** :
 - Comment vérifier que ta solution a effectivement réduit le nombre de requêtes SQL (de 101 à 3) ?
 - Y a-t-il d'autres endroits dans le code avec le même problème ?
 - Pourquoi le mode test ajoute-t-il 30ms par article et comment cela simule-t-il une DB distante ?
+
+#### Résolution
+- **Solution** : Utilisation de **Eager Loading** avec `Article::with('author')->withCount('comments')->get()`.
+- **Amélioration** : 
+    - Réduit de **101 requêtes à 2 requêtes** (98% d'amélioration)
+    - 1 requête pour articles + authors (JOIN)
+    - 1 requête pour le COUNT des commentaires
+- **Vérification** : 
+    - `tests/Feature/PerformanceTest.php` confirme < 5 requêtes
+    - Header HTTP `X-SQL-Count: 2` vérifié manuellement
 
 ---
 
