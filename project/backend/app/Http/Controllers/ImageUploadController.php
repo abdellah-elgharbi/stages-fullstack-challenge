@@ -13,6 +13,9 @@ class ImageUploadController extends Controller
      */
     public function upload(Request $request)
     {
+        // BUG-003: Upload limit is set to 20MB (20480 KB)
+        // This exceeds the ticket requirement of 10MB minimum
+        // PHP limits: upload_max_filesize=40M, post_max_size=40M (verified)
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:20480',
         ]);
