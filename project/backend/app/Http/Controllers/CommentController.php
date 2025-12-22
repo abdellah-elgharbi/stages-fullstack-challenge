@@ -35,6 +35,8 @@ class CommentController extends Controller
         $comment = Comment::create($validated);
         $comment->load('user');
 
+        \Illuminate\Support\Facades\Cache::forget('stats');
+
         return response()->json($comment, 201);
     }
 
@@ -50,6 +52,8 @@ class CommentController extends Controller
 
     $remainingCount = Comment::where('article_id', $articleId)->count();
     $firstRemaining = Comment::where('article_id', $articleId)->orderBy('id')->first(); // null si 0
+
+    \Illuminate\Support\Facades\Cache::forget('stats');
 
     return response()->json([
         'message' => 'Comment deleted successfully',

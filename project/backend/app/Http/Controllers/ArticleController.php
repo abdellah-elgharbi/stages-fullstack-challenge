@@ -13,27 +13,36 @@ class ArticleController extends Controller
      */
     public function index(Request $request)
     {
-        // Enable query logging for this request
-        \DB::enableQueryLog();
-        
-        $articles = Article::with('author')->withCount('comments')->get();
+        // Use dynamic key for filtered lists (which expire in 60s anyway)
+        $cacheKey = empty($request->all()) ? 'articles_list' : 'articles_list:' . md5(serialize($request->all()));
 
-        $articles = $articles->map(function ($article) use ($request) {
-            if ($request->has('performance_test')) {
-                usleep(30000); // 30ms par article pour simuler le coût du N+1
-            }
+        $articles = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($request) {
+            $query = Article::with('author')->withCount('comments');
+            
+          
+            
+            $articles = $query->get();
 
-            return [
-                'id' => $article->id,
-                'title' => $article->title,
-                'content' => substr($article->content, 0, 200) . '...',
-                'author' => $article->author->name,
-                'comments_count' => $article->comments_count,
-                'published_at' => $article->published_at,
-                'created_at' => $article->created_at,
-            ];
+            return $articles->map(function ($article) use ($request) {
+                if ($request->has('performance_test')) {
+                    usleep(30000); // 30ms par article pour simuler le coût du N+1
+                }
+
+                return [
+                    'id' => $article->id,
+                    'title' => $article->title,
+                    'content' => substr($article->content, 0, 200) . '...',
+                    'author' => $article->author->name,
+                    'comments_count' => $article->comments_count,
+                    'published_at' => $article->published_at,
+                    'created_at' => $article->created_at,
+                ];
+            });
         });
 
+        // Debug header relies on the query log, which is only populated if the query actually runs.
+        // We can't easily preserve accurate "X-SQL-Count" of the *original* query when cached without storing it in cache too.
+        
         return response()->json($articles)->header('X-SQL-Count', count(\DB::getQueryLog()));
     }
 
@@ -121,6 +130,9 @@ class ArticleController extends Controller
             'published_at' => now(),
         ]);
 
+        \Illuminate\Support\Facades\Cache::forget('articles_list');
+        \Illuminate\Support\Facades\Cache::forget('stats');
+
         return response()->json($article, 201);
     }
 
@@ -138,6 +150,8 @@ class ArticleController extends Controller
 
         $article->update($validated);
 
+        \Illuminate\Support\Facades\Cache::forget('articles_list');
+
         return response()->json($article);
     }
 
@@ -148,6 +162,9 @@ class ArticleController extends Controller
     {
         $article = Article::findOrFail($id);
         $article->delete();
+
+        \Illuminate\Support\Facades\Cache::forget('articles_list');
+        \Illuminate\Support\Facades\Cache::forget('stats');
 
         return response()->json(['message' => 'Article deleted successfully']);
     }
