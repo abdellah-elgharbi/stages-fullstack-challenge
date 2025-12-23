@@ -72,18 +72,28 @@ class ArticleController extends Controller
             return response()->json([]);
         }
 
-        $articles = DB::select(
-            "SELECT * FROM articles WHERE title LIKE '%" . $query . "%'"
-        );
+        // $articles = DB::select(
+        //     "SELECT * FROM articles WHERE title LIKE '%" . $query . "%'"
+        // );
 
-        $results = array_map(function ($article) {
+        // Escape LIKE wildcards to avoid unintended matches
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query);
+
+        // Use CONVERT + COLLATE to perform an accent-insensitive comparison without changing the DB schema.
+        $collation = 'utf8mb4_unicode_ci';
+
+        $articles = DB::table('articles')
+            ->whereRaw("CONVERT(title USING utf8mb4) COLLATE {$collation} LIKE ?", ["%{$escaped}%"])
+            ->get();
+
+        $results = $articles->map(function ($article) {
             return [
                 'id' => $article->id,
                 'title' => $article->title,
                 'content' => substr($article->content, 0, 200),
                 'published_at' => $article->published_at,
             ];
-        }, $articles);
+        });
 
         return response()->json($results);
     }
