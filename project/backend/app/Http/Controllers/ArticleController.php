@@ -13,7 +13,10 @@ class ArticleController extends Controller
      */
     public function index(Request $request)
     {
-        $articles = Article::all();
+        // Enable query logging for this request
+        \DB::enableQueryLog();
+        
+        $articles = Article::with('author')->withCount('comments')->get();
 
         $articles = $articles->map(function ($article) use ($request) {
             if ($request->has('performance_test')) {
@@ -25,13 +28,13 @@ class ArticleController extends Controller
                 'title' => $article->title,
                 'content' => substr($article->content, 0, 200) . '...',
                 'author' => $article->author->name,
-                'comments_count' => $article->comments->count(),
+                'comments_count' => $article->comments_count,
                 'published_at' => $article->published_at,
                 'created_at' => $article->created_at,
             ];
         });
 
-        return response()->json($articles);
+        return response()->json($articles)->header('X-SQL-Count', count(\DB::getQueryLog()));
     }
 
     /**
@@ -72,18 +75,28 @@ class ArticleController extends Controller
             return response()->json([]);
         }
 
-        $articles = DB::select(
-            "SELECT * FROM articles WHERE title LIKE '%" . $query . "%'"
-        );
+        // $articles = DB::select(
+        //     "SELECT * FROM articles WHERE title LIKE '%" . $query . "%'"
+        // );
 
-        $results = array_map(function ($article) {
+        // Escape LIKE wildcards to avoid unintended matches
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query);
+        // SQL injection fix: the user input is passed as a bound parameter ("?") instead of being concatenated into the raw SQL string.
+        // Use CONVERT + COLLATE to perform an accent-insensitive comparison without changing the DB schema.
+        $collation = 'utf8mb4_unicode_ci';
+
+        $articles = DB::table('articles')
+            ->whereRaw("CONVERT(title USING utf8mb4) COLLATE {$collation} LIKE ?", ["%{$escaped}%"])
+            ->get();
+
+        $results = $articles->map(function ($article) {
             return [
                 'id' => $article->id,
                 'title' => $article->title,
                 'content' => substr($article->content, 0, 200),
                 'published_at' => $article->published_at,
             ];
-        }, $articles);
+        });
 
         return response()->json($results);
     }
