@@ -24,7 +24,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        if (!Hash::check($credentials['password'], $user->password)) {
+        if ($user->password !== $credentials['password']) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 

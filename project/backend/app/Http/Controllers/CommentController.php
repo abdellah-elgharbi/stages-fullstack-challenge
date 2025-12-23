@@ -32,6 +32,8 @@ class CommentController extends Controller
             'content' => 'required|string',
         ]);
 
+        $validated['content'] = htmlspecialchars(strip_tags($validated['content']), ENT_QUOTES, 'UTF-8');
+
         $comment = Comment::create($validated);
         $comment->load('user');
 
@@ -72,6 +74,8 @@ class CommentController extends Controller
         $validated = $request->validate([
             'content' => 'required|string',
         ]);
+
+        $validated['content'] = strip_tags($validated['content']);
 
         $comment->update($validated);
 

@@ -17,6 +17,7 @@ services:
       - DB_DATABASE=blog_db
       - DB_USERNAME=blog_user
       - DB_PASSWORD=blog_password
+      - ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000,http://host.docker.internal:3000
     depends_on:
       - mysql
     networks:
