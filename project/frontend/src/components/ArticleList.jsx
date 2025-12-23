@@ -18,14 +18,14 @@ function ArticleList({ searchQuery }) {
       setLoading(true);
       setError(null);
       const startTime = performance.now();
-      
+
       let response;
       if (searchQuery && searchQuery.trim() !== '') {
         response = await searchArticles(searchQuery);
       } else {
         response = await getArticles(withPerformanceTest);
       }
-      
+
       const endTime = performance.now();
       const timeInMs = (endTime - startTime).toFixed(0);
       setLoadTime(timeInMs);
@@ -37,7 +37,16 @@ function ArticleList({ searchQuery }) {
       setLoading(false);
     }
   };
-
+  // Updates the local comment counter for a specific article without refetching.
+  const updateCommentsCount = (articleId, delta) => {
+    setArticles(prev =>
+      prev.map(a =>
+        a.id === articleId
+          ? { ...a, comments_count: (a.comments_count ?? 0) + delta }
+          : a
+      )
+    );
+  };
   const handleDelete = async (id) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
       return;
@@ -78,9 +87,9 @@ function ArticleList({ searchQuery }) {
               ⏱️ {loadTime}ms
             </span>
           )}
-          <button 
+          <button
             onClick={() => setShowPerformanceTest(!showPerformanceTest)}
-            style={{ 
+            style={{
               fontSize: '0.85em',
               padding: '0.5em 1em',
               backgroundColor: showPerformanceTest ? '#e67e22' : '#95a5a6'
@@ -101,15 +110,15 @@ function ArticleList({ searchQuery }) {
         }}>
           <strong>🐛 Test de performance (PERF-001) - MODE ACTIF</strong>
           <div style={{ marginTop: '0.5rem' }}>
-            ⚠️ Un délai artificiel de 30ms par article simule le coût du problème N+1<br/>
-            • Ouvrez la console navigateur (F12) → onglet Network<br/>
-            • Ouvrez les logs Docker : <code>docker logs blog_backend -f</code><br/>
-            • Observez le nombre de requêtes SQL (~101 requêtes pour 50 articles au lieu d'1)<br/>
+            ⚠️ Un délai artificiel de 30ms par article simule le coût du problème N+1<br />
+            • Ouvrez la console navigateur (F12) → onglet Network<br />
+            • Ouvrez les logs Docker : <code>docker logs blog_backend -f</code><br />
+            • Observez le nombre de requêtes SQL (~101 requêtes pour 50 articles au lieu d'1)<br />
             • Avec 50 articles × 30ms = ~1,5 seconde de chargement
           </div>
           {loadTime && (
             <div style={{ marginTop: '0.5rem', color: '#856404' }}>
-              ⏱️ Temps de chargement : <strong>{loadTime}ms</strong> 
+              ⏱️ Temps de chargement : <strong>{loadTime}ms</strong>
               {parseInt(loadTime) > 1000 ? ' 🚨 TRÈS LENT!' : parseInt(loadTime) > 500 ? ' ⚠️ LENT!' : ''}
             </div>
           )}
@@ -118,10 +127,11 @@ function ArticleList({ searchQuery }) {
 
       <div>
         {articles.map(article => (
-          <ArticleCard 
-            key={article.id} 
+          <ArticleCard
+            key={article.id}
             article={article}
             onDelete={handleDelete}
+            onCommentsCountChange={updateCommentsCount}
           />
         ))}
       </div>
