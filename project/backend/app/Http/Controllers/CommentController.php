@@ -41,22 +41,22 @@ class CommentController extends Controller
     /**
      * Remove the specified comment.
      */
-    public function destroy($id)
-    {
-        $comment = Comment::findOrFail($id);
-        $articleId = $comment->article_id;
+   public function destroy($id)
+{
+    $comment = Comment::findOrFail($id);
+    $articleId = $comment->article_id;
 
-        $comment->delete();
+    $comment->delete();
 
-        $remainingComments = Comment::where('article_id', $articleId)->get();
-        $firstComment = $remainingComments[0];
+    $remainingCount = Comment::where('article_id', $articleId)->count();
+    $firstRemaining = Comment::where('article_id', $articleId)->orderBy('id')->first(); // null si 0
 
-        return response()->json([
-            'message' => 'Comment deleted successfully',
-            'remaining_count' => $remainingComments->count(),
-            'first_remaining' => $firstComment,
-        ]);
-    }
+    return response()->json([
+        'message' => 'Comment deleted successfully',
+        'remaining_count' => $remainingCount,
+        'first_remaining' => $firstRemaining,
+    ], 200);
+}
 
     /**
      * Update a comment.

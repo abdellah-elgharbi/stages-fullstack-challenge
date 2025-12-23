@@ -41,6 +41,11 @@ Le problème : l'utilisateur doit taper exactement le même accent que dans le t
 - Comment vas-tu gérer la migration de la collation sachant que les données existent déjà et qu'on ne peut pas recréer la table ni supprimer les données ?
 - Comment tester que ta solution fonctionne dans tous les cas (accents, majuscules/minuscules, caractères spéciaux) ?
 
+#### Résolution
+- **Solution** : Utilisation de `CONVERT(title USING utf8mb4) COLLATE utf8mb4_unicode_ci` dans la requête SQL pour ignorer les accents.
+- **Résultat** : La recherche trouve les articles indépendamment des accents (ex: "cafe" trouve "café") sans migration DB.
+- **Tests** : Tous les tests de `tests/Feature/SearchTest.php` sont validés (accents, casse, caractères spéciaux).
+
 ---
 
 ### [BUG-002] Impossible de supprimer le dernier commentaire d'un article
@@ -74,6 +79,14 @@ On doit pouvoir supprimer n'importe quel commentaire, qu'il soit seul ou non.
 - Comment vas-tu reproduire l'erreur de manière fiable pour la débugger ?
 - Pourquoi l'erreur se produit seulement avec 1 commentaire et pas avec 2+ ?
 - Quelle est la meilleure approche pour éviter ce type d'erreur à l'avenir dans d'autres parties du code ?
+
+### Resolution
+
+- **Solution**: Remplacer `$remainingComments[0]` par `$remainingComments->first()`.
+
+- **Explication** : Après suppression du dernier commentaire, la collection est vide donc l’index `0` n’existe pas (mais `first()` retourne `null`). [web:665]
+
+- **Test** : `tests/Feature/CommentTest.php::test_delete_last_comment_works`.
 
 ---
 
@@ -138,6 +151,13 @@ Dates en français, timezone Europe/Paris, format JJ/MM/AAAA.
 - Où se configure la timezone et la locale dans une application Laravel ?
 - Faut-il modifier le backend, le frontend, ou les deux ?
 - Comment s'assurer que les dates stockées en base restent cohérentes après le changement ?
+
+#### Résolution
+- **Ce qui a été changé** : Configuration mise à jour pour utiliser **`locale: fr`** et **`timezone: Europe/Paris`** ; frontend utilise `Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris' })` pour le rendu des dates.
+- **Tests ajoutés** : Test unitaire pour vérifier `config('app.locale')` et `config('app.timezone')` ainsi que la configuration de Carbon.
+- **Base de données** :  
+  Laravel stocke les timestamps en UTC par défaut.  
+  Si certaines données existent avec un fuseau horaire local, il est recommandé de les convertir en UTC avant la mise en production.
 
 ---
 

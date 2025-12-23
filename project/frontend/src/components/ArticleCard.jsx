@@ -9,14 +9,28 @@ function ArticleCard({ article, onDelete }) {
     
     const date = new Date(dateString);
     
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
+    // Format date and time in French locale and Europe/Paris timezone
+    const datePart = new Intl.DateTimeFormat('fr-FR', {
       day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      timeZone: 'Europe/Paris'
+    }).format(date);
+
+    const timePart = new Intl.DateTimeFormat('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'America/Los_Angeles'
-    });
+      hour12: false,
+      timeZone: 'Europe/Paris'
+    }).format(date);
+
+    // extract short timezone name (e.g., CET/CEST)
+    const tzPart = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Europe/Paris',
+      timeZoneName: 'short'
+    }).formatToParts(date).find(p => p.type === 'timeZoneName')?.value || '';
+
+    return `${datePart} à ${timePart}${tzPart ? ' (' + tzPart + ')' : ''}`;
   };
 
   return (
