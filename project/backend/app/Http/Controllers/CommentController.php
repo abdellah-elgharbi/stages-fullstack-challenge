@@ -32,8 +32,12 @@ class CommentController extends Controller
             'content' => 'required|string',
         ]);
 
+        $validated['content'] = htmlspecialchars(strip_tags($validated['content']), ENT_QUOTES, 'UTF-8');
+
         $comment = Comment::create($validated);
         $comment->load('user');
+
+        \Illuminate\Support\Facades\Cache::forget('stats');
 
         return response()->json($comment, 201);
     }
@@ -41,22 +45,24 @@ class CommentController extends Controller
     /**
      * Remove the specified comment.
      */
-    public function destroy($id)
-    {
-        $comment = Comment::findOrFail($id);
-        $articleId = $comment->article_id;
+   public function destroy($id)
+{
+    $comment = Comment::findOrFail($id);
+    $articleId = $comment->article_id;
 
-        $comment->delete();
+    $comment->delete();
 
-        $remainingComments = Comment::where('article_id', $articleId)->get();
-        $firstComment = $remainingComments[0];
+    $remainingCount = Comment::where('article_id', $articleId)->count();
+    $firstRemaining = Comment::where('article_id', $articleId)->orderBy('id')->first(); // null si 0
 
-        return response()->json([
-            'message' => 'Comment deleted successfully',
-            'remaining_count' => $remainingComments->count(),
-            'first_remaining' => $firstComment,
-        ]);
-    }
+    \Illuminate\Support\Facades\Cache::forget('stats');
+
+    return response()->json([
+        'message' => 'Comment deleted successfully',
+        'remaining_count' => $remainingCount,
+        'first_remaining' => $firstRemaining,
+    ], 200);
+}
 
     /**
      * Update a comment.
@@ -68,6 +74,8 @@ class CommentController extends Controller
         $validated = $request->validate([
             'content' => 'required|string',
         ]);
+
+        $validated['content'] = strip_tags($validated['content']);
 
         $comment->update($validated);
 
