@@ -14,7 +14,7 @@ function ImageUpload() {
       setSelectedFile(file);
       setMessage('');
       setError('');
-      
+
       const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
       setMessage(`Fichier sélectionné : ${file.name} (${sizeMB} MB)`);
     }
@@ -40,7 +40,7 @@ function ImageUpload() {
       setSelectedFile(null);
     } catch (err) {
       if (err.response?.status === 413) {
-        setError('❌ Erreur 413 : Image trop volumineuse ! La limite est de 2MB.');
+        setError('❌ Erreur 413 : Image trop volumineuse ! La limite est de 20MB.');
       } else {
         setError(`❌ Erreur lors de l'upload : ${err.message}`);
       }
@@ -67,9 +67,9 @@ function ImageUpload() {
       </div>
 
       {message && !error && (
-        <div style={{ 
-          padding: '0.8rem', 
-          backgroundColor: '#d4edda', 
+        <div style={{
+          padding: '0.8rem',
+          backgroundColor: '#d4edda',
           color: '#155724',
           borderRadius: '4px',
           marginBottom: '1rem',
@@ -86,8 +86,8 @@ function ImageUpload() {
       )}
 
       {uploadedImage && (
-        <div style={{ 
-          padding: '0.8rem', 
+        <div style={{
+          padding: '0.8rem',
           backgroundColor: '#f8f9fa',
           borderRadius: '4px',
           marginBottom: '1rem',
@@ -99,8 +99,8 @@ function ImageUpload() {
         </div>
       )}
 
-      <button 
-        onClick={handleUpload} 
+      <button
+        onClick={handleUpload}
         disabled={!selectedFile || uploading}
         style={{ marginRight: '0.5rem' }}
       >
@@ -108,7 +108,7 @@ function ImageUpload() {
       </button>
 
       {selectedFile && (
-        <button 
+        <button
           onClick={() => {
             setSelectedFile(null);
             setMessage('');
@@ -120,9 +120,9 @@ function ImageUpload() {
         </button>
       )}
 
-      <div style={{ 
-        marginTop: '1.5rem', 
-        padding: '1rem', 
+      <div style={{
+        marginTop: '1.5rem',
+        padding: '1rem',
         backgroundColor: '#fff3cd',
         borderRadius: '4px',
         fontSize: '0.85em'
