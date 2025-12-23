@@ -33,12 +33,37 @@ function ArticleCard({ article, onDelete, onCommentsCountChange }) {
     return `${datePart} à ${timePart}${tzPart ? ' (' + tzPart + ')' : ''}`;
   };
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
   return (
     <div className="card">
       <h3>{article.title}</h3>
       <div style={{ color: '#7f8c8d', fontSize: '0.9em', marginBottom: '0.5rem' }}>
         Par {article.author} • {formatDate(article.created_at)}
       </div>
+
+      {article.image_path && (
+        <picture style={{ display: 'block', marginBottom: '1rem' }}>
+          <source
+            srcSet={`${API_URL}${article.image_path}`}
+            type="image/webp"
+          />
+          <img
+            src={`${API_URL}${article.image_path}`}
+            alt={article.title}
+            loading="lazy"
+            width="600"
+            height="400"
+            style={{
+              width: '100%',
+              height: 'auto',
+              borderRadius: '4px',
+              objectFit: 'cover'
+            }}
+          />
+        </picture>
+      )}
+
       <p style={{ marginBottom: '1rem' }}>{article.content}</p>
 
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
